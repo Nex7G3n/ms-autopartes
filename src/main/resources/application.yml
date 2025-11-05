@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: autopartes
+  profiles:
+    active: dev
+  config:
+    import: optional:configserver:https://config-server.vardocs.app
+server:
+  port: 8082
