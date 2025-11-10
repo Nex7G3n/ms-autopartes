@@ -1,5 +1,6 @@
 package com.example.ServicioAutoPartes.controllers;
 
+import com.example.ServicioAutoPartes.dtos.PiezaDTO;
 import com.example.ServicioAutoPartes.models.Pieza;
 import com.example.ServicioAutoPartes.repositories.PiezaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/piezas")
@@ -28,23 +30,31 @@ public class PiezaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Pieza>> getAllPiezas() {
+    public ResponseEntity<List<PiezaDTO>> getAllPiezas() {
         try {
             List<Pieza> piezas = piezaRepository.findAll();
             if (piezas.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
-            return new ResponseEntity<>(piezas, HttpStatus.OK);
+            List<PiezaDTO> piezaDTOs = piezas.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+            return new ResponseEntity<>(piezaDTOs, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Pieza> getPiezaById(@PathVariable("id") Long id) {
+    public ResponseEntity<PiezaDTO> getPiezaById(@PathVariable("id") Long id) {
         Optional<Pieza> piezaData = piezaRepository.findById(id);
-        return piezaData.map(pieza -> new ResponseEntity<>(pieza, HttpStatus.OK))
+        return piezaData.map(this::convertToDto)
+                .map(piezaDTO -> new ResponseEntity<>(piezaDTO, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    private PiezaDTO convertToDto(Pieza pieza) {
+        return new PiezaDTO(pieza.getId(), pieza.getNombre());
     }
 
     @PutMapping("/{id}")

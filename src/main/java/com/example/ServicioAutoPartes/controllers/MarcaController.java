@@ -1,5 +1,6 @@
 package com.example.ServicioAutoPartes.controllers;
 
+import com.example.ServicioAutoPartes.dtos.MarcaDTO;
 import com.example.ServicioAutoPartes.models.Marca;
 import com.example.ServicioAutoPartes.repositories.MarcaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/marcas")
@@ -28,23 +30,31 @@ public class MarcaController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Marca>> getAllMarcas() {
+    public ResponseEntity<List<MarcaDTO>> getAllMarcas() {
         try {
             List<Marca> marcas = marcaRepository.findAll();
             if (marcas.isEmpty()) {
                 return new ResponseEntity<>(HttpStatus.NO_CONTENT);
             }
-            return new ResponseEntity<>(marcas, HttpStatus.OK);
+            List<MarcaDTO> marcaDTOs = marcas.stream()
+                    .map(this::convertToDto)
+                    .collect(Collectors.toList());
+            return new ResponseEntity<>(marcaDTOs, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Marca> getMarcaById(@PathVariable("id") Long id) {
+    public ResponseEntity<MarcaDTO> getMarcaById(@PathVariable("id") Long id) {
         Optional<Marca> marcaData = marcaRepository.findById(id);
-        return marcaData.map(marca -> new ResponseEntity<>(marca, HttpStatus.OK))
+        return marcaData.map(this::convertToDto)
+                .map(marcaDTO -> new ResponseEntity<>(marcaDTO, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    private MarcaDTO convertToDto(Marca marca) {
+        return new MarcaDTO(marca.getId(), marca.getNombre());
     }
 
     @PutMapping("/{id}")
