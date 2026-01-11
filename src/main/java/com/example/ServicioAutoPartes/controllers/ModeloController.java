@@ -28,10 +28,30 @@ public class ModeloController {
     @PostMapping
     public ResponseEntity<ModeloDTO> createModelo(@RequestBody Modelo modelo) {
         try {
+            // Validar que se proporcionen los datos requeridos
+            if (modelo.getNombre() == null || modelo.getNombre().trim().isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            
+            // Validar que se proporciona una marca
+            if (modelo.getMarca() == null || modelo.getMarca().getId() == null) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            
+            // Buscar la marca por ID
+            Optional<Marca> marcaOpt = marcaRepository.findById(modelo.getMarca().getId());
+            if (marcaOpt.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            
+            // Asignar la marca encontrada
+            modelo.setMarca(marcaOpt.get());
+            
             Modelo nuevoModelo = modeloRepository.save(modelo);
             ModeloDTO modeloDTO = convertToDto(nuevoModelo);
             return new ResponseEntity<>(modeloDTO, HttpStatus.CREATED);
         } catch (Exception e) {
+            e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
