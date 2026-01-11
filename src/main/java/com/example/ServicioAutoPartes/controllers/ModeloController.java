@@ -16,7 +16,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/modelos")
+@RequestMapping("/api/modelos")
 public class ModeloController {
 
     @Autowired
