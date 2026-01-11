@@ -34,18 +34,62 @@ public class AutoparteController {
     private PiezaRepository piezaRepository;
 
     @PostMapping
-    public ResponseEntity<Autoparte> createAutoparte(@RequestBody Autoparte autoparte) {
+    public ResponseEntity<AutoparteDTO> createAutoparte(@RequestBody Autoparte autoparte) {
         try {
-            // Asume que el JSON de entrada contiene objetos "modelo" y "pieza" con solo sus "id"
-            return modeloRepository.findById(autoparte.getModelo().getId()).flatMap(modelo ->
-                    piezaRepository.findById(autoparte.getPieza().getId()).map(pieza -> {
-                        autoparte.setModelo(modelo);
-                        autoparte.setPieza(pieza);
-                        Autoparte nuevaAutoparte = autoparteRepository.save(autoparte);
-                        return new ResponseEntity<>(nuevaAutoparte, HttpStatus.CREATED);
-                    })
-            ).orElse(new ResponseEntity<>(HttpStatus.BAD_REQUEST));
+            // Validar campos requeridos
+            if (autoparte.getCodigoProducto() == null || autoparte.getCodigoProducto().trim().isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            if (autoparte.getPrecio() == null || autoparte.getPrecio() < 0) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            if (autoparte.getStock() == null || autoparte.getStock() < 0) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            
+            // Validar que modelo y pieza estén presentes con sus IDs
+            if (autoparte.getModelo() == null || autoparte.getModelo().getId() == null) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            if (autoparte.getPieza() == null || autoparte.getPieza().getId() == null) {
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            
+            // Buscar modelo y pieza por sus IDs
+            Optional<Modelo> modeloOpt = modeloRepository.findById(autoparte.getModelo().getId());
+            if (modeloOpt.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Modelo no encontrado
+            }
+            
+            Optional<Pieza> piezaOpt = piezaRepository.findById(autoparte.getPieza().getId());
+            if (piezaOpt.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND); // Pieza no encontrada
+            }
+            
+            // Verificar si el código de producto ya existe
+            if (autoparteRepository.findByCodigoProducto(autoparte.getCodigoProducto()).isPresent()) {
+                return new ResponseEntity<>(HttpStatus.CONFLICT); // Código duplicado
+            }
+            
+            // Crear nueva autoparte con las entidades completas
+            Autoparte nuevaAutoparte = new Autoparte();
+            nuevaAutoparte.setCodigoProducto(autoparte.getCodigoProducto());
+            nuevaAutoparte.setPrecio(autoparte.getPrecio());
+            nuevaAutoparte.setStock(autoparte.getStock());
+            nuevaAutoparte.setEstado(autoparte.getEstado() != null ? autoparte.getEstado() : "Disponible");
+            nuevaAutoparte.setModelo(modeloOpt.get());
+            nuevaAutoparte.setPieza(piezaOpt.get());
+            
+            // Guardar en la base de datos
+            Autoparte autoparteGuardada = autoparteRepository.save(nuevaAutoparte);
+            
+            // Convertir a DTO para evitar problemas de proxies de Hibernate
+            AutoparteDTO autoparteDTO = convertToDto(autoparteGuardada);
+            
+            return new ResponseEntity<>(autoparteDTO, HttpStatus.CREATED);
+            
         } catch (Exception e) {
+            e.printStackTrace(); // Para debugging
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
