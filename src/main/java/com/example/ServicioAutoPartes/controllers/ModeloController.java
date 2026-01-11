@@ -26,13 +26,14 @@ public class ModeloController {
     private MarcaRepository marcaRepository;
 
     @PostMapping
-    public ResponseEntity<Modelo> createModelo(@RequestBody Modelo modelo) {
+    public ResponseEntity<ModeloDTO> createModelo(@RequestBody Modelo modelo) {
         try {
             // Se asume que el JSON de entrada para Modelo contiene un objeto "marca" con solo el "id"
             return marcaRepository.findById(modelo.getMarca().getId()).map(marca -> {
                 modelo.setMarca(marca);
                 Modelo nuevoModelo = modeloRepository.save(modelo);
-                return new ResponseEntity<>(nuevoModelo, HttpStatus.CREATED);
+                ModeloDTO modeloDTO = convertToDto(nuevoModelo);
+                return new ResponseEntity<>(modeloDTO, HttpStatus.CREATED);
             }).orElse(new ResponseEntity<>(HttpStatus.BAD_REQUEST));
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
