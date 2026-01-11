@@ -20,10 +20,11 @@ public class MarcaController {
     private MarcaRepository marcaRepository;
 
     @PostMapping
-    public ResponseEntity<Marca> createMarca(@RequestBody Marca marca) {
+    public ResponseEntity<MarcaDTO> createMarca(@RequestBody Marca marca) {
         try {
             Marca nuevaMarca = marcaRepository.save(marca);
-            return new ResponseEntity<>(nuevaMarca, HttpStatus.CREATED);
+            MarcaDTO marcaDTO = convertToDto(nuevaMarca);
+            return new ResponseEntity<>(marcaDTO, HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
