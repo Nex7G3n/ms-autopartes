@@ -28,19 +28,32 @@ public class ModeloController {
     @PostMapping
     public ResponseEntity<ModeloDTO> createModelo(@RequestBody Modelo modelo) {
         try {
+            // Debug: imprimir qué datos llegan
+            System.out.println("=== DEBUG CREATE MODELO ===");
+            System.out.println("Nombre: " + modelo.getNombre());
+            System.out.println("Anio: " + modelo.getAnio());
+            System.out.println("Marca: " + modelo.getMarca());
+            if (modelo.getMarca() != null) {
+                System.out.println("Marca ID: " + modelo.getMarca().getId());
+            }
+            System.out.println("==========================");
+            
             // Validar que se proporcionen los datos requeridos
             if (modelo.getNombre() == null || modelo.getNombre().trim().isEmpty()) {
+                System.out.println("ERROR: Nombre es nulo o vacío");
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
             
             // Validar que se proporciona una marca
             if (modelo.getMarca() == null || modelo.getMarca().getId() == null) {
+                System.out.println("ERROR: Marca es nula o no tiene ID");
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
             
             // Buscar la marca por ID
             Optional<Marca> marcaOpt = marcaRepository.findById(modelo.getMarca().getId());
             if (marcaOpt.isEmpty()) {
+                System.out.println("ERROR: Marca con ID " + modelo.getMarca().getId() + " no encontrada");
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
             
@@ -49,8 +62,10 @@ public class ModeloController {
             
             Modelo nuevoModelo = modeloRepository.save(modelo);
             ModeloDTO modeloDTO = convertToDto(nuevoModelo);
+            System.out.println("Modelo creado con éxito: " + nuevoModelo.getId());
             return new ResponseEntity<>(modeloDTO, HttpStatus.CREATED);
         } catch (Exception e) {
+            System.out.println("ERROR INTERNO: " + e.getMessage());
             e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
