@@ -90,7 +90,7 @@ public class ModeloController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Modelo> updateModelo(@PathVariable("id") Long id, @RequestBody Modelo modelo) {
+    public ResponseEntity<ModeloDTO> updateModelo(@PathVariable("id") Long id, @RequestBody Modelo modelo) {
         Optional<Modelo> modeloData = modeloRepository.findById(id);
 
         if (modeloData.isPresent()) {
@@ -99,7 +99,8 @@ public class ModeloController {
                 _modelo.setNombre(modelo.getNombre());
                 _modelo.setAnio(modelo.getAnio());
                 _modelo.setMarca(marca);
-                return new ResponseEntity<>(modeloRepository.save(_modelo), HttpStatus.OK);
+                Modelo updatedModelo = modeloRepository.save(_modelo);
+                return new ResponseEntity<>(convertToDto(updatedModelo), HttpStatus.OK);
             }).orElse(new ResponseEntity<>(HttpStatus.BAD_REQUEST));
         } else {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
