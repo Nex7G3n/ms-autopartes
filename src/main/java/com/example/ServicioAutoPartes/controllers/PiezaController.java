@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/autopartes/piezas")
+@RequestMapping("/piezas")
 public class PiezaController {
 
     @Autowired
