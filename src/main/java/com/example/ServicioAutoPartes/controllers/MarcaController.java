@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/marcas")
+@RequestMapping("/api/autopartes/marcas")
 public class MarcaController {
 
     @Autowired

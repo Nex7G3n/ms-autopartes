@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/autopartes")
+@RequestMapping("/api/autopartes/autopartes")
 public class AutoparteController {
 
     @Autowired
