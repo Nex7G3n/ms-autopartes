@@ -19,7 +19,7 @@ public class Modelo {
     private String anio;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "marca_id", nullable = false)
+    @JoinColumn(name = "marca_id")
     @JsonIgnoreProperties("modelos")
     private Marca marca;
 
