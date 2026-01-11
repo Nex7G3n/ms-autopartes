@@ -4,6 +4,6 @@ spring:
   profiles:
     active: dev
   config:
-    import: optional:configserver:https://config-server.vardocs.app
+    import: optional:configserver:http://kkokg4wcogkcg8gog80w0gsg.46.62.225.65.sslip.io/
 server:
   port: 8082
