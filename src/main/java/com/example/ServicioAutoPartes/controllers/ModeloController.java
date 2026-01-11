@@ -2,6 +2,7 @@ package com.example.ServicioAutoPartes.controllers;
 
 import com.example.ServicioAutoPartes.dtos.MarcaDTO;
 import com.example.ServicioAutoPartes.dtos.ModeloDTO;
+import com.example.ServicioAutoPartes.dtos.CreateModeloRequest;
 import com.example.ServicioAutoPartes.models.Marca;
 import com.example.ServicioAutoPartes.models.Modelo;
 import com.example.ServicioAutoPartes.repositories.ModeloRepository;
@@ -26,43 +27,46 @@ public class ModeloController {
     private MarcaRepository marcaRepository;
 
     @PostMapping
-    public ResponseEntity<ModeloDTO> createModelo(@RequestBody Modelo modelo) {
+    public ResponseEntity<ModeloDTO> createModelo(@RequestBody CreateModeloRequest request) {
         try {
             // Debug: imprimir qué datos llegan
             System.out.println("=== DEBUG CREATE MODELO ===");
-            System.out.println("Nombre: " + modelo.getNombre());
-            System.out.println("Anio: " + modelo.getAnio());
-            System.out.println("Marca: " + modelo.getMarca());
-            if (modelo.getMarca() != null) {
-                System.out.println("Marca ID: " + modelo.getMarca().getId());
+            System.out.println("Nombre: " + request.getNombre());
+            System.out.println("Anio: " + request.getAnio());
+            System.out.println("Marca: " + request.getMarca());
+            if (request.getMarca() != null) {
+                System.out.println("Marca ID: " + request.getMarca().getId());
             }
             System.out.println("==========================");
             
             // Validar que se proporcionen los datos requeridos
-            if (modelo.getNombre() == null || modelo.getNombre().trim().isEmpty()) {
+            if (request.getNombre() == null || request.getNombre().trim().isEmpty()) {
                 System.out.println("ERROR: Nombre es nulo o vacío");
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
             
             // Validar que se proporciona una marca
-            if (modelo.getMarca() == null || modelo.getMarca().getId() == null) {
+            if (request.getMarca() == null || request.getMarca().getId() == null) {
                 System.out.println("ERROR: Marca es nula o no tiene ID");
                 return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
             }
             
             // Buscar la marca por ID
-            Optional<Marca> marcaOpt = marcaRepository.findById(modelo.getMarca().getId());
+            Optional<Marca> marcaOpt = marcaRepository.findById(request.getMarca().getId());
             if (marcaOpt.isEmpty()) {
-                System.out.println("ERROR: Marca con ID " + modelo.getMarca().getId() + " no encontrada");
+                System.out.println("ERROR: Marca con ID " + request.getMarca().getId() + " no encontrada");
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
             
-            // Asignar la marca encontrada
-            modelo.setMarca(marcaOpt.get());
+            // Crear el modelo con la marca encontrada
+            Modelo nuevoModelo = new Modelo();
+            nuevoModelo.setNombre(request.getNombre());
+            nuevoModelo.setAnio(request.getAnio());
+            nuevoModelo.setMarca(marcaOpt.get());
             
-            Modelo nuevoModelo = modeloRepository.save(modelo);
-            ModeloDTO modeloDTO = convertToDto(nuevoModelo);
-            System.out.println("Modelo creado con éxito: " + nuevoModelo.getId());
+            Modelo modeloGuardado = modeloRepository.save(nuevoModelo);
+            ModeloDTO modeloDTO = convertToDto(modeloGuardado);
+            System.out.println("Modelo creado con éxito: " + modeloGuardado.getId());
             return new ResponseEntity<>(modeloDTO, HttpStatus.CREATED);
         } catch (Exception e) {
             System.out.println("ERROR INTERNO: " + e.getMessage());
