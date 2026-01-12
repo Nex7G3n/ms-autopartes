@@ -1,6 +1,7 @@
 package com.example.ServicioAutoPartes.controllers;
 
 import com.example.ServicioAutoPartes.dtos.AutoparteDTO;
+import com.example.ServicioAutoPartes.dtos.CreateAutoparteRequest;
 import com.example.ServicioAutoPartes.dtos.MarcaDTO;
 import com.example.ServicioAutoPartes.dtos.ModeloDTO;
 import com.example.ServicioAutoPartes.dtos.PiezaDTO;
@@ -34,12 +35,56 @@ public class AutoparteController {
     private PiezaRepository piezaRepository;
 
     @PostMapping
-    public ResponseEntity<AutoparteDTO> createAutoparte(@RequestBody Autoparte autoparte) {
+    public ResponseEntity<AutoparteDTO> createAutoparte(@RequestBody CreateAutoparteRequest request) {
         try {
-            Autoparte nuevaAutoparte = autoparteRepository.save(autoparte);
-            AutoparteDTO autoparteDTO = convertToDto(nuevaAutoparte);
+            // Validar que se proporcionen los datos requeridos
+            if (request.getCodigoProducto() == null || request.getCodigoProducto().trim().isEmpty()) {
+                System.out.println("ERROR: Código producto es nulo o vacío");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            
+            // Validar que se proporciona un modelo
+            if (request.getModelo() == null || request.getModelo().getId() == null) {
+                System.out.println("ERROR: Modelo es nulo o no tiene ID");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            
+            // Validar que se proporciona una pieza
+            if (request.getPieza() == null || request.getPieza().getId() == null) {
+                System.out.println("ERROR: Pieza es nula o no tiene ID");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            
+            // Buscar el modelo por ID
+            Optional<Modelo> modeloOpt = modeloRepository.findById(request.getModelo().getId());
+            if (modeloOpt.isEmpty()) {
+                System.out.println("ERROR: Modelo con ID " + request.getModelo().getId() + " no encontrado");
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            
+            // Buscar la pieza por ID
+            Optional<Pieza> piezaOpt = piezaRepository.findById(request.getPieza().getId());
+            if (piezaOpt.isEmpty()) {
+                System.out.println("ERROR: Pieza con ID " + request.getPieza().getId() + " no encontrada");
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            
+            // Crear la autoparte con las entidades encontradas
+            Autoparte nuevaAutoparte = new Autoparte();
+            nuevaAutoparte.setCodigoProducto(request.getCodigoProducto());
+            nuevaAutoparte.setModelo(modeloOpt.get());
+            nuevaAutoparte.setPieza(piezaOpt.get());
+            nuevaAutoparte.setPrecio(request.getPrecio());
+            nuevaAutoparte.setStock(request.getStock());
+            nuevaAutoparte.setEstado(request.getEstado());
+            
+            Autoparte autoparteGuardada = autoparteRepository.save(nuevaAutoparte);
+            AutoparteDTO autoparteDTO = convertToDto(autoparteGuardada);
+            System.out.println("Autoparte creada con éxito: " + autoparteGuardada.getId());
             return new ResponseEntity<>(autoparteDTO, HttpStatus.CREATED);
         } catch (Exception e) {
+            System.out.println("ERROR INTERNO en createAutoparte: " + e.getMessage());
+            e.printStackTrace();
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
