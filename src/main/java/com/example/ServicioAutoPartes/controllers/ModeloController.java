@@ -132,20 +132,47 @@ public class ModeloController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ModeloDTO> updateModelo(@PathVariable("id") Long id, @RequestBody Modelo modelo) {
-        Optional<Modelo> modeloData = modeloRepository.findById(id);
-
-        if (modeloData.isPresent()) {
-            return marcaRepository.findById(modelo.getMarca().getId()).map(marca -> {
-                Modelo _modelo = modeloData.get();
-                _modelo.setNombre(modelo.getNombre());
-                _modelo.setAnio(modelo.getAnio());
-                _modelo.setMarca(marca);
-                Modelo updatedModelo = modeloRepository.save(_modelo);
-                return new ResponseEntity<>(convertToDto(updatedModelo), HttpStatus.OK);
-            }).orElse(new ResponseEntity<>(HttpStatus.BAD_REQUEST));
-        } else {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    public ResponseEntity<ModeloDTO> updateModelo(@PathVariable("id") Long id, @RequestBody CreateModeloRequest request) {
+        try {
+            Optional<Modelo> modeloData = modeloRepository.findById(id);
+            
+            if (modeloData.isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            
+            // Validar que se proporcionen los datos requeridos
+            if (request.getNombre() == null || request.getNombre().trim().isEmpty()) {
+                System.out.println("ERROR: Nombre es nulo o vacío");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            
+            // Validar que se proporciona una marca
+            if (request.getMarca() == null || request.getMarca().getId() == null) {
+                System.out.println("ERROR: Marca es nula o no tiene ID");
+                return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            }
+            
+            // Buscar la marca por ID
+            Optional<Marca> marcaOpt = marcaRepository.findById(request.getMarca().getId());
+            if (marcaOpt.isEmpty()) {
+                System.out.println("ERROR: Marca con ID " + request.getMarca().getId() + " no encontrada");
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            
+            // Actualizar el modelo
+            Modelo _modelo = modeloData.get();
+            _modelo.setNombre(request.getNombre());
+            _modelo.setAnio(request.getAnio());
+            _modelo.setMarca(marcaOpt.get());
+            
+            Modelo updatedModelo = modeloRepository.save(_modelo);
+            ModeloDTO modeloDTO = convertToDto(updatedModelo);
+            System.out.println("Modelo actualizado con éxito: " + updatedModelo.getId());
+            return new ResponseEntity<>(modeloDTO, HttpStatus.OK);
+        } catch (Exception e) {
+            System.out.println("ERROR INTERNO en updateModelo: " + e.getMessage());
+            e.printStackTrace();
+            return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
