@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +32,12 @@ public class ModeloController {
         try {
             // Debug: imprimir qué datos llegan
             System.out.println("=== DEBUG CREATE MODELO ===");
+            
+            // Imprimir el JSON recibido usando ObjectMapper
+            ObjectMapper mapper = new ObjectMapper();
+            String jsonRequest = mapper.writeValueAsString(request);
+            System.out.println("JSON recibido: " + jsonRequest);
+            
             System.out.println("Nombre: " + request.getNombre());
             System.out.println("Anio: " + request.getAnio());
             System.out.println("Marca: " + request.getMarca());
