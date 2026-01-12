@@ -14,3 +14,7 @@ eureka:
       defaultZone: http://cc0cko8gscw08k8w0oocc000.46.62.225.65.sslip.io/eureka/
     register-with-eureka: true
     fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    non-secure-port-enabled: true
+    secure-port-enabled: false
